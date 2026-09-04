@@ -1,15 +1,28 @@
 import type { FastifyInstance } from "fastify";
 import type { Storage } from "../storage.js";
+import type { RateLimiter } from "../rate-limit.js";
 
 export async function linkRoutes(
   app: FastifyInstance,
-  opts: { storage: Storage; baseUrl: string }
+  opts: { storage: Storage; baseUrl: string; limiter: RateLimiter }
 ): Promise<void> {
-  const { storage, baseUrl } = opts;
+  const { storage, baseUrl, limiter } = opts;
 
   app.post(
     "/links",
     {
+      preHandler: async (request, reply) => {
+        const result = limiter.tryConsume(request.ip);
+        reply.header("x-ratelimit-limit", limiter.max);
+        reply.header("x-ratelimit-remaining", result.remaining);
+        if (!result.allowed) {
+          const retrySec = Math.max(1, Math.ceil(result.retryAfterMs / 1000));
+          reply.header("retry-after", String(retrySec));
+          return reply
+            .status(429)
+            .send({ error: `rate limit exceeded, retry in ${retrySec}s` });
+        }
+      },
       schema: {
         body: {
           type: "object",
@@ -36,6 +49,11 @@ export async function linkRoutes(
             required: ["error"],
           },
           409: {
+            type: "object",
+            properties: { error: { type: "string" } },
+            required: ["error"],
+          },
+          429: {
             type: "object",
             properties: { error: { type: "string" } },
             required: ["error"],

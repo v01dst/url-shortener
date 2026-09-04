@@ -14,13 +14,25 @@ function intEnv(name: string, fallback: number): number {
   return Number.isFinite(value) ? value : fallback;
 }
 
+export const DEFAULT_CONFIG: Config = {
+  port: 3000,
+  host: "0.0.0.0",
+  dbPath: "./data/shortlinks.db",
+  baseUrl: "http://localhost:3000",
+  rateLimitMax: 30,
+  rateLimitWindowMs: 60_000,
+};
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   return {
-    port: intEnv("PORT", 3000),
-    host: env.HOST ?? "0.0.0.0",
-    dbPath: env.DB_PATH ?? "./data/shortlinks.db",
-    baseUrl: env.BASE_URL ?? `http://localhost:${intEnv("PORT", 3000)}`,
-    rateLimitMax: intEnv("RATE_LIMIT_MAX", 30),
-    rateLimitWindowMs: intEnv("RATE_LIMIT_WINDOW_MS", 60_000),
+    port: intEnv("PORT", DEFAULT_CONFIG.port),
+    host: env.HOST ?? DEFAULT_CONFIG.host,
+    dbPath: env.DB_PATH ?? DEFAULT_CONFIG.dbPath,
+    baseUrl: env.BASE_URL ?? DEFAULT_CONFIG.baseUrl,
+    rateLimitMax: intEnv("RATE_LIMIT_MAX", DEFAULT_CONFIG.rateLimitMax),
+    rateLimitWindowMs: intEnv(
+      "RATE_LIMIT_WINDOW_MS",
+      DEFAULT_CONFIG.rateLimitWindowMs
+    ),
   };
 }
