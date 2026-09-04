@@ -10,7 +10,7 @@ export async function redirectRoutes(
   app.get("/:code", async (request, reply) => {
     const { code } = request.params as { code: string };
     const link = storage.getLinkByCode(code);
-    if (!link) {
+    if (!link || !link.active) {
       return reply.status(404).send({ error: `no link for code "${code}"` });
     }
 

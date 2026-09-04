@@ -26,6 +26,7 @@ export interface LinkRow {
   url: string;
   created_at: string;
   clicks: number;
+  active: number;
 }
 
 export interface ClickRow {
@@ -128,6 +129,20 @@ export class Storage {
     return this.db.prepare("SELECT * FROM links WHERE id = ?").get(id) as
       | LinkRow
       | undefined;
+  }
+
+  deactivate(code: string): boolean {
+    const info = this.db
+      .prepare("UPDATE links SET active = 0 WHERE code = ?")
+      .run(code);
+    return info.changes > 0;
+  }
+
+  reactivate(code: string): boolean {
+    const info = this.db
+      .prepare("UPDATE links SET active = 1 WHERE code = ?")
+      .run(code);
+    return info.changes > 0;
   }
 
   recordClick(linkId: number, input: ClickInput = {}): void {

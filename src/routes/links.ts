@@ -2,11 +2,79 @@ import type { FastifyInstance } from "fastify";
 import type { Storage } from "../storage.js";
 import type { RateLimiter } from "../rate-limit.js";
 
+const errorResponse = {
+  type: "object",
+  properties: { error: { type: "string" } },
+  required: ["error"],
+} as const;
+
 export async function linkRoutes(
   app: FastifyInstance,
   opts: { storage: Storage; baseUrl: string; limiter: RateLimiter }
 ): Promise<void> {
   const { storage, baseUrl, limiter } = opts;
+
+  app.get(
+    "/links/:code/info",
+    {
+      schema: {
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              code: { type: "string" },
+              url: { type: "string" },
+              shortUrl: { type: "string" },
+              createdAt: { type: "string" },
+              totalClicks: { type: "number" },
+              active: { type: "boolean" },
+            },
+            required: ["code", "url", "shortUrl", "createdAt", "totalClicks", "active"],
+          },
+          404: errorResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      const { code } = request.params as { code: string };
+      const link = storage.getLinkByCode(code);
+      if (!link) {
+        return reply.status(404).send({ error: `no link for code "${code}"` });
+      }
+      return reply.status(200).send({
+        code: link.code,
+        url: link.url,
+        shortUrl: `${baseUrl}/${link.code}`,
+        createdAt: link.created_at,
+        totalClicks: link.clicks,
+        active: Boolean(link.active),
+      });
+    }
+  );
+
+  app.delete(
+    "/links/:code",
+    {
+      schema: {
+        response: {
+          200: {
+            type: "object",
+            properties: { deactivated: { type: "boolean" } },
+            required: ["deactivated"],
+          },
+          404: errorResponse,
+        },
+      },
+    },
+    async (request, reply) => {
+      const { code } = request.params as { code: string };
+      const ok = storage.deactivate(code);
+      if (!ok) {
+        return reply.status(404).send({ error: `no link for code "${code}"` });
+      }
+      return reply.status(200).send({ deactivated: true });
+    }
+  );
 
   app.post(
     "/links",
