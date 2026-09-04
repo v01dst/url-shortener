@@ -1,0 +1,29 @@
+services:
+  url-shortener:
+    build: .
+    image: v01dst/url-shortener:1.0.0
+    container_name: url-shortener
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      DB_PATH: /app/data/shortlinks.db
+      BASE_URL: ${BASE_URL:-http://localhost:3000}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-30}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-60000}
+    volumes:
+      - url-shortener-data:/app/data
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
+
+volumes:
+  url-shortener-data:

@@ -11,12 +11,17 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "keywords": ["url-shortener", "analytics", "fastify"],
+  "keywords": [
+    "url-shortener",
+    "analytics",
+    "fastify"
+  ],
   "author": "v01dst",
   "license": "MIT",
   "dependencies": {
     "better-sqlite3": "^12.6.0",
-    "fastify": "^5.6.2"
+    "fastify": "^5.6.2",
+    "tsx": "^4.23.13"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
