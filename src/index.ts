@@ -3,7 +3,10 @@ import { loadConfig } from "./config.js";
 
 async function main(): Promise<void> {
   const config = loadConfig();
-  const app = createApp({ logger: true });
+  const app = createApp({
+    config,
+    logger: true,
+  });
 
   try {
     await app.listen({ port: config.port, host: config.host });
