@@ -2,6 +2,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { openDb, type Db } from "./db.js";
 import { Storage } from "./storage.js";
 import { linkRoutes } from "./routes/links.js";
+import { redirectRoutes } from "./routes/redirect.js";
 import type { Config } from "./config.js";
 
 export interface AppOptions {
@@ -23,6 +24,7 @@ export function createApp(opts: AppOptions): FastifyInstance {
   app.decorate("db", db);
 
   app.register(linkRoutes, { storage, baseUrl });
+  app.register(redirectRoutes, { storage });
 
   app.get("/", async () => ({
     service: "url-shortener",
