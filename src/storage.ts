@@ -131,6 +131,14 @@ export class Storage {
       | undefined;
   }
 
+  listLinks(limit = 50): LinkRow[] {
+    return this.db
+      .prepare(
+        "SELECT * FROM links ORDER BY id DESC LIMIT ?"
+      )
+      .all(Math.max(1, Math.min(limit, 200))) as LinkRow[];
+  }
+
   deactivate(code: string): boolean {
     const info = this.db
       .prepare("UPDATE links SET active = 0 WHERE code = ?")

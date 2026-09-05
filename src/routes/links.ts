@@ -15,6 +15,26 @@ export async function linkRoutes(
   const { storage, baseUrl, limiter } = opts;
 
   app.get(
+    "/links",
+    async (request, reply) => {
+      const query = request.query as { limit?: string };
+      const limit = Math.min(Number(query.limit) || 50, 200);
+      const links = storage.listLinks(limit);
+      return reply.status(200).send({
+        count: links.length,
+        links: links.map((l) => ({
+          code: l.code,
+          url: l.url,
+          shortUrl: `${baseUrl}/${l.code}`,
+          clicks: l.clicks,
+          active: Boolean(l.active),
+          createdAt: l.created_at,
+        })),
+      });
+    }
+  );
+
+  app.get(
     "/links/:code/info",
     {
       schema: {

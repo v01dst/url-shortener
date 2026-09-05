@@ -45,3 +45,40 @@ describe("info + deactivation", () => {
     await app2.close();
   });
 });
+
+describe("GET /links", () => {
+  it("lists created links newest first without active links", async () => {
+    const app2 = createApp({ config: { baseUrl: "http://t.local" } });
+    await app2.inject({
+      method: "POST",
+      url: "/links",
+      payload: { url: "https://one.example", code: "one" },
+    });
+    await app2.inject({
+      method: "POST",
+      url: "/links",
+      payload: { url: "https://two.example", code: "two" },
+    });
+    const res = await app2.inject({ url: "/links" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.count).toBe(2);
+    expect(body.links[0].code).toBe("two");
+    expect(body.links[1].code).toBe("one");
+    expect(body.links[0].shortUrl).toBe("http://t.local/two");
+    await app2.close();
+  });
+
+  it("reflects deactivation in the list", async () => {
+    const app2 = createApp({ config: { baseUrl: "http://t.local" } });
+    await app2.inject({
+      method: "POST",
+      url: "/links",
+      payload: { url: "https://x.example", code: "dead" },
+    });
+    await app2.inject({ method: "DELETE", url: "/links/dead" });
+    const res = await app2.inject({ url: "/links" });
+    expect(res.json().links[0].active).toBe(false);
+    await app2.close();
+  });
+});
